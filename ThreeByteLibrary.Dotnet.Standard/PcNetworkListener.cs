@@ -59,6 +59,8 @@ namespace ThreeByteLibrary.Dotnet.Standard
             output.Add($"{log}", $" | {DateTime.Now:HH:mm:ss.fff} | {message}");
 
             // write to Serilog one day
+            // this breaks the unit test, since the unit test constructs this class with the constructor
+            // with no params. sigh
             _log.LogInformation($"{log} {message}");
 
             // some event handler here to message the UI

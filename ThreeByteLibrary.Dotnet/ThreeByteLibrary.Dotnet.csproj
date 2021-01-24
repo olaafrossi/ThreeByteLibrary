@@ -2,6 +2,12 @@
 
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
+    <AssemblyVersion>0.0.0.0</AssemblyVersion>
+    <FileVersion>0.0.0.0</FileVersion>
+    <Version>0.0.0.0-xyz</Version>
+    <Authors>Chris Keitel, Olaaf Rossi</Authors>
+    <Company>Three Byte Intermedia, Inc</Company>
+    <Copyright>Three Byte Intermedia, Inc 2021</Copyright>
   </PropertyGroup>
 
   <ItemGroup>

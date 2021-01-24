@@ -20,7 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ThreeByteLibrary.Dotnet.Standard\ThreeByteLibrary.Dotnet.Standard.csproj" />
+    <ProjectReference Include="..\ThreeByteLibrary.Dotnet\ThreeByteLibrary.Dotnet.csproj" />
   </ItemGroup>
 
   <ItemGroup>

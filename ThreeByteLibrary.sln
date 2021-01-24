@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30907.101
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThreeByteLibrary.Dotnet.Standard", "ThreeByteLibrary.Dotnet.Standard\ThreeByteLibrary.Dotnet.Standard.csproj", "{7282EB6E-48AC-402E-A8CD-F53EFC24A0C9}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThreeByteLibrary.Dotnet", "ThreeByteLibrary.Dotnet\ThreeByteLibrary.Dotnet.csproj", "{E624AAD5-8703-438F-A347-ED8DDAA500FE}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThreeByteLibrary.Dotnet.Tests", "ThreeByteLibrary.Dotnet.Tests\ThreeByteLibrary.Dotnet.Tests.csproj", "{AC7135FE-30A8-4318-86B5-4AC0E774FB82}"
@@ -15,10 +13,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{7282EB6E-48AC-402E-A8CD-F53EFC24A0C9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7282EB6E-48AC-402E-A8CD-F53EFC24A0C9}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{7282EB6E-48AC-402E-A8CD-F53EFC24A0C9}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{7282EB6E-48AC-402E-A8CD-F53EFC24A0C9}.Release|Any CPU.Build.0 = Release|Any CPU
 		{E624AAD5-8703-438F-A347-ED8DDAA500FE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{E624AAD5-8703-438F-A347-ED8DDAA500FE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E624AAD5-8703-438F-A347-ED8DDAA500FE}.Release|Any CPU.ActiveCfg = Release|Any CPU

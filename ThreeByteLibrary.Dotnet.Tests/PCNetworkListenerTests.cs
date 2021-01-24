@@ -7,7 +7,7 @@ using System.Text.Json.Serialization;
 using Xunit;
 using Newtonsoft.Json;
 
-namespace ThreeByteLibrary.Dotnet.Standard.Tests
+namespace ThreeByteLibrary.Dotnet.Tests
 {
     public class PCNetworkListenerTests
     {

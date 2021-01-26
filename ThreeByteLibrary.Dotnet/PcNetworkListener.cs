@@ -121,17 +121,20 @@ namespace ThreeByteLibrary.Dotnet
                     }
                     else if (message == "REBOOT" || message == "RESTART")
                     {
-                        LogToAll(PCNetworkListenerMessages._UiLogger.appLog, "| Reboot Triggered");
+                        LogToAll(PCNetworkListenerMessages._UiLogger.appLog, "| Rebooting PC- in 5 seconds");
+                        Thread.Sleep(5000);
                         Process.Start("shutdown", "/r /f /t 3 /c \"Reboot Triggered\" /d p:0:0");
                     }
                     else if (message == "SHUTDOWN")
                     {
-                        LogToAll(PCNetworkListenerMessages._UiLogger.appLog, "| Shutting Down PC");
+                        LogToAll(PCNetworkListenerMessages._UiLogger.appLog, "| Shutting Down PC- in 5 seconds");
+                        Thread.Sleep(5000);
                         Process.Start("shutdown", "/s /f /t 3 /c \"Shutdown Triggered\" /d p:0:0");
                     }
                     else if (message == "SLEEP")
                     {
-                        LogToAll(PCNetworkListenerMessages._UiLogger.appLog, "| Sleeping PC");
+                        LogToAll(PCNetworkListenerMessages._UiLogger.appLog, "| Sleeping PC- in 5 seconds");
+                        Thread.Sleep(5000);
                         Process.Start("rundll32.exe", "powrprof.dll,SetSuspendState 0,1,0");
                     }
                 }

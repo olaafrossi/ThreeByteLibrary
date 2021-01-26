@@ -42,47 +42,37 @@ namespace ThreeByteLibrary.Dotnet
 
         public int GetAppSettingsDataUdpPort()
         {
-            string happy = _config.GetValue<int>("UdpPort").ToString();
-            LogToAll(PCNetworkListenerMessages._UiLogger.netLog, happy);
-            LogToAll(PCNetworkListenerMessages._UiLogger.netLog, happy);
-            LogToAll(PCNetworkListenerMessages._UiLogger.netLog, happy);
-
+            int udpPort = _config.GetValue<int>("UdpPort");
             int output = 0;
-            int udpPort = 0;
+
+            if (udpPort >= 65535)
+            {
+                LogToAll(PCNetworkListenerMessages._UiLogger.appLog,
+                    $"Port setting in appsettings.jsonfile is greater than 65535 (illegal) Setting to 16009 | your setting is {udpPort}");
+                output = 16009;
+                return output;
+            }
 
             try
             {
-                udpPort = _config.GetValue<int>("UdpPort");
-                LogToAll(PCNetworkListenerMessages._UiLogger.appLog,
-                    $"Parsed a valid UDP listener port from the appsettings.jsonfile | {udpPort}");
                 if (udpPort is 16009)
                 {
                     output = udpPort;
                 }
-                else
+                else if (udpPort >= 0)
                 {
-                    output = 16009;
                     LogToAll(PCNetworkListenerMessages._UiLogger.appLog,
-                        $"Invalid Parse from appsettings.json | Setting UDP Port to | {udpPort}");
+                        $"Parsed a valid (non-standard) UDP listener port from the appsettings.jsonfile | {udpPort}");
+                    output = udpPort;
                 }
             }
             catch
             {
                 LogToAll(PCNetworkListenerMessages._UiLogger.appLog,
-                    $"Failed to parse a valid UDP listener port from the appsettings.jsonfile | {udpPort}");
+                    $"Failed to parse a valid UDP listener port from the appsettings.jsonfile Setting to 16009 | {udpPort}");
+                output = 16009;
             }
 
-            //if (udpPort is > 0 and not 16009)
-            //{
-            //    output = udpPort;
-            //    LogToAll(PCNetworkListenerMessages._UiLogger.appLog,
-            //        $"Parsed a valid/custom UDP listener port from the appsettings.jsonfile | {udpPort}");
-            //    return output;
-            //}
-
-            //LogToAll(PCNetworkListenerMessages._UiLogger.appLog,
-            //    $"Something is wrong with UDP port settings, and using a hardcodeded value of 16009 | {udpPort}");
-            //output = 16009;
             return output;
         }
 
@@ -162,11 +152,7 @@ namespace ThreeByteLibrary.Dotnet
 
         private void LogToAll(Enum log, string message)
         {
-            // write to Serilog one day
-            // this breaks the unit test, since the unit test constructs this class with the constructor
-            // with no params. sigh
-
-            //_log.LogInformation(message);
+            _log.LogInformation(message);
 
             PCNetworkListenerMessages args = new PCNetworkListenerMessages();
             args.UILogger = (PCNetworkListenerMessages._UiLogger) log;

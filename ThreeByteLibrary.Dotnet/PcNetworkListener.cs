@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
@@ -9,13 +8,13 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace ThreeByteLibrary.Dotnet
-{ 
+{
     public class PcNetworkListener : IPcNetworkListener
     {
         private readonly IConfiguration _config;
         private readonly ILogger<PcNetworkListener> _log;
 
-        //private CrestronAppMessages messages = new();
+        //private PCNetworkListenerMessages messages = new();
 
         /// <summary>
         ///     Constructor for the PC listener, injects dependencies
@@ -39,74 +38,51 @@ namespace ThreeByteLibrary.Dotnet
             ThreadPool.QueueUserWorkItem(ListenLoop);
         }
 
-        private UdpClient OpenUdpListener(int port)
-        {
-            UdpClient udpSender = new UdpClient(port);
-            return udpSender;
-        }
-
-        private IPEndPoint UdpEndPoint(IPAddress address, int port)
-        {
-            IPEndPoint udpEndPoint = new IPEndPoint(address, port);
-            return udpEndPoint;
-        }
-
-        private Dictionary<string, string> LogToAll(string log, string message)
-        {
-            var output = new Dictionary<string, string>();
-
-            // this should go to the UI one day
-            output.Add($"{log}", $" | {DateTime.Now:HH:mm:ss.fff} | {message}");
-
-            // write to Serilog one day
-            // this breaks the unit test, since the unit test constructs this class with the constructor
-            // with no params. sigh
-            //_log.LogInformation($"{log} {message}");
-
-            // some event handler here to message the UI
-
-            return output;
-        }
+        public event EventHandler<PCNetworkListenerMessages> MessageHit;
 
         public int GetAppSettingsDataUdpPort()
         {
+            string happy = _config.GetValue<int>("UdpPort").ToString();
+            LogToAll(PCNetworkListenerMessages._UiLogger.netLog, happy);
+            LogToAll(PCNetworkListenerMessages._UiLogger.netLog, happy);
+            LogToAll(PCNetworkListenerMessages._UiLogger.netLog, happy);
+
             int output = 0;
             int udpPort = 0;
 
             try
             {
                 udpPort = _config.GetValue<int>("UdpPort");
-                LogToAll("appLog", $"Parsed a valid UDP listener port from the appsettings.jsonfile | {udpPort}");
+                LogToAll(PCNetworkListenerMessages._UiLogger.appLog,
+                    $"Parsed a valid UDP listener port from the appsettings.jsonfile | {udpPort}");
+                if (udpPort is 16009)
+                {
+                    output = udpPort;
+                }
+                else
+                {
+                    output = 16009;
+                    LogToAll(PCNetworkListenerMessages._UiLogger.appLog,
+                        $"Invalid Parse from appsettings.json | Setting UDP Port to | {udpPort}");
+                }
             }
             catch
             {
-                LogToAll("appLog",
+                LogToAll(PCNetworkListenerMessages._UiLogger.appLog,
                     $"Failed to parse a valid UDP listener port from the appsettings.jsonfile | {udpPort}");
             }
 
-            if (udpPort is 16009)
-            {
-                output = udpPort;
-            }
+            //if (udpPort is > 0 and not 16009)
+            //{
+            //    output = udpPort;
+            //    LogToAll(PCNetworkListenerMessages._UiLogger.appLog,
+            //        $"Parsed a valid/custom UDP listener port from the appsettings.jsonfile | {udpPort}");
+            //    return output;
+            //}
 
-            if (udpPort is 0)
-            {
-                output = 16009;
-                LogToAll("appLog", $"UDP listener port was set to zero (invalid) changing to 16009 | {udpPort}");
-                return output;
-            }
-
-            if (udpPort is > 0 and not 16009)
-            {
-                output = udpPort;
-                LogToAll("appLog",
-                    $"Parsed a valid/custom UDP listener port from the appsettings.jsonfile | {udpPort}");
-                return output;
-            }
-
-            LogToAll("appLog",
-                $"Something is wrong with UDP port settings, and using a hardcodeded value of 16009 | {udpPort}");
-            output = 16009;
+            //LogToAll(PCNetworkListenerMessages._UiLogger.appLog,
+            //    $"Something is wrong with UDP port settings, and using a hardcodeded value of 16009 | {udpPort}");
+            //output = 16009;
             return output;
         }
 
@@ -120,12 +96,13 @@ namespace ThreeByteLibrary.Dotnet
 
             byte[] dataBytes;
 
-            LogToAll("netLog", $"UDP listener started on port {portNumber}");
+            LogToAll(PCNetworkListenerMessages._UiLogger.netLog, $"UDP listener started on port {portNumber}");
 
             while (listening)
             {
                 dataBytes = udpClient.Receive(ref udpEndPoint);
-                LogToAll("netLog", $"| Last Remote: {udpEndPoint.Address} on Port: {udpEndPoint.Port}");
+                LogToAll(PCNetworkListenerMessages._UiLogger.netLog,
+                    $"| Last Remote: {udpEndPoint.Address} on Port: {udpEndPoint.Port}");
 
                 string stringIn =
                     Encoding.ASCII.GetString(dataBytes); // Incoming commands must be received as a single packet.
@@ -139,7 +116,7 @@ namespace ThreeByteLibrary.Dotnet
                     stringIn = stringIn.Remove(0, delimPos + 1); //remove the message
                     delimPos = stringIn.IndexOf("\r");
 
-                    LogToAll("netLog", $"| Incoming Message: {message}");
+                    LogToAll(PCNetworkListenerMessages._UiLogger.netLog, $"| Incoming Message: {message}");
 
                     if (message == "EXIT")
                     {
@@ -150,29 +127,63 @@ namespace ThreeByteLibrary.Dotnet
                         string responseString = "PONG\r";
                         byte[] sendBytes = Encoding.ASCII.GetBytes(responseString);
                         udpClient.Send(sendBytes, sendBytes.Length, udpEndPoint);
-                        LogToAll("appLog", $"| Sent: {responseString}");
+                        LogToAll(PCNetworkListenerMessages._UiLogger.netLog, $"| Sent: {responseString}");
                     }
                     else if (message == "REBOOT" || message == "RESTART")
                     {
-                        LogToAll("appLog", "| Reboot Triggered");
+                        LogToAll(PCNetworkListenerMessages._UiLogger.appLog, "| Reboot Triggered");
                         Process.Start("shutdown", "/r /f /t 3 /c \"Reboot Triggered\" /d p:0:0");
                     }
                     else if (message == "SHUTDOWN")
                     {
-                        LogToAll("appLog", "| Shutting Down PC");
+                        LogToAll(PCNetworkListenerMessages._UiLogger.appLog, "| Shutting Down PC");
                         Process.Start("shutdown", "/s /f /t 3 /c \"Shutdown Triggered\" /d p:0:0");
                     }
                     else if (message == "SLEEP")
                     {
-                        LogToAll("appLog", "| Sleeping PC");
+                        LogToAll(PCNetworkListenerMessages._UiLogger.appLog, "| Sleeping PC");
                         Process.Start("rundll32.exe", "powrprof.dll,SetSuspendState 0,1,0");
                     }
                 }
             }
         }
 
-        // probably not needed, but maybe to cast the Log Dictionary into an object for easier event handling?
-        public class CrestronAppMessages
+        private UdpClient OpenUdpListener(int port)
+        {
+            UdpClient udpSender = new UdpClient(port);
+            return udpSender;
+        }
+
+        private IPEndPoint UdpEndPoint(IPAddress address, int port)
+        {
+            IPEndPoint udpEndPoint = new IPEndPoint(address, port);
+            return udpEndPoint;
+        }
+
+        private void LogToAll(Enum log, string message)
+        {
+            // write to Serilog one day
+            // this breaks the unit test, since the unit test constructs this class with the constructor
+            // with no params. sigh
+
+            //_log.LogInformation(message);
+
+            PCNetworkListenerMessages args = new PCNetworkListenerMessages();
+            args.UILogger = (PCNetworkListenerMessages._UiLogger) log;
+            args.Message = $"{DateTime.Now:HH:mm:ss.fff} | {message}";
+            OnNewMessages(args);
+        }
+
+        protected virtual void OnNewMessages(PCNetworkListenerMessages e)
+        {
+            EventHandler<PCNetworkListenerMessages> handler = MessageHit;
+            if (handler != null)
+            {
+                handler(this, e);
+            }
+        }
+
+        public class PCNetworkListenerMessages : EventArgs
         {
             public enum _UiLogger
             {

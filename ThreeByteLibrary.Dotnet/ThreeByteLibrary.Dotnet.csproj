@@ -8,6 +8,7 @@
     <Authors>Chris Keitel, Olaaf Rossi</Authors>
     <Company>Three Byte Intermedia, Inc</Company>
     <Copyright>Three Byte Intermedia, Inc 2021</Copyright>
+    <Platforms>AnyCPU;x64;x86</Platforms>
   </PropertyGroup>
 
   <ItemGroup>

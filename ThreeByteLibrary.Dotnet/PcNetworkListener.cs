@@ -48,7 +48,7 @@ namespace ThreeByteLibrary.Dotnet
             if (udpPort >= 65535)
             {
                 LogToAll(PCNetworkListenerMessages._UiLogger.appLog,
-                    $"Port setting in appsettings.jsonfile is greater than 65535 (illegal) Setting to 16009 | your setting is {udpPort}");
+                    $"Port setting in appsettings.jsonfile is greater than 65535 (illegal). Setting to 16009 | your setting is {udpPort}");
                 output = 16009;
                 return output;
             }
@@ -59,7 +59,13 @@ namespace ThreeByteLibrary.Dotnet
                 {
                     output = udpPort;
                 }
-                else if (udpPort >= 0)
+                else if (udpPort is 0)
+                {
+                    LogToAll(PCNetworkListenerMessages._UiLogger.appLog,
+                        $"Invalid UDP listener port found. Setting to 16009 | {udpPort}");
+                    output = 16009;
+                }
+                else if (udpPort >= 1)
                 {
                     LogToAll(PCNetworkListenerMessages._UiLogger.appLog,
                         $"Parsed a valid (non-standard) UDP listener port from the appsettings.jsonfile | {udpPort}");

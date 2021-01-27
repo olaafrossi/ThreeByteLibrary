@@ -32,15 +32,14 @@ steps:
     platform: '$(buildPlatform)'
     configuration: '$(buildConfiguration)'
 
-#
+
 - task: GitHubRelease@1
   inputs:
     gitHubConnection: 'GitHubToken'
     repositoryName: 'olaafrossi/ThreeByteLibrary'
     action: 'create'
     target: '$(Build.SourceVersion)'
-    tagSource: 'gitTag'
-    tagPattern: '$(Build.BuildNumber)'
+    tagSource: 'userSpecifiedTag'
+    tag: '$(Build.BuildNumber)'
     changeLogCompareToRelease: 'lastFullRelease'
     changeLogType: 'commitBased'
-    assets: $(Build.ArtifactStagingDirectory)/*.dll

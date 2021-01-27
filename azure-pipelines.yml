@@ -40,6 +40,6 @@ steps:
     action: 'create'
     target: '$(Build.SourceVersion)'
     tagSource: 'gitTag'
-    title: 'Azure Build'
+    tagPattern: 'release-v1.*'
     changeLogCompareToRelease: 'lastFullRelease'
     changeLogType: 'commitBased'

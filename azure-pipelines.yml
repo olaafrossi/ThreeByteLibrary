@@ -31,3 +31,15 @@ steps:
   inputs:
     platform: '$(buildPlatform)'
     configuration: '$(buildConfiguration)'
+
+#
+- task: GitHubRelease@1
+  inputs:
+    gitHubConnection: 'GitHubToken'
+    repositoryName: 'olaafrossi/ThreeByteLibrary'
+    action: 'create'
+    target: '$(Build.SourceVersion)'
+    tagSource: 'gitTag'
+    title: 'Azure Build'
+    changeLogCompareToRelease: 'lastFullRelease'
+    changeLogType: 'commitBased'

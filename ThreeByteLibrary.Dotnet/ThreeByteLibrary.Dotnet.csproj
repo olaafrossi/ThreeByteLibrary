@@ -1,12 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
     <FileVersion>0.0.0.0</FileVersion>
     <Version>0.0.0.0-xyz</Version>
-  </PropertyGroup>
-
-    <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
     <AssemblyVersion>0.0.0.0</AssemblyVersion>
       <Authors>Chris Keitel, Olaaf Rossi</Authors>
     <Company>Three Byte Intermedia, Inc</Company>

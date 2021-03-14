@@ -92,7 +92,6 @@ namespace ThreeByteLibrary.Dotnet
         public void ListenLoop(object state)
         {
             int portNumber = this.GetAppSettingsDataUdpPort();
-            //int portNumber = 16555;
             var udpClient = this.OpenUdpListener(portNumber);
             var udpEndPoint = this.UdpEndPoint(IPAddress.Any, 0);
 

@@ -1,13 +1,10 @@
-﻿using System;
+﻿// Created by Three Byte Intemedia, Inc. | project: PCManager |
+// Created: 2021 02 03
+// by Olaaf Rossi
 
 namespace ThreeByteLibrary.Dotnet
 {
     public interface IPcNetworkListener
     {
-        event EventHandler<PcNetworkListener.PCNetworkListenerMessages> MessageHit;
-
-        int GetAppSettingsDataUdpPort();
-        void ListenLoop(object state);
-        void Run();
     }
 }

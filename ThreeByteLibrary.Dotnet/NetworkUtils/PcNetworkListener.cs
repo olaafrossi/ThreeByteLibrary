@@ -7,7 +7,7 @@ using System.Threading;
 using Serilog;
 using Serilog.Core;
 
-namespace ThreeByteLibrary.Dotnet
+namespace ThreeByteLibrary.Dotnet.NetworkUtils
 {
     public class PcNetworkListener : IPcNetworkListener
     {

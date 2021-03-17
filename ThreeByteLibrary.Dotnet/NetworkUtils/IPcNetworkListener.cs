@@ -4,7 +4,7 @@
 
 using System;
 
-namespace ThreeByteLibrary.Dotnet
+namespace ThreeByteLibrary.Dotnet.NetworkUtils
 {
     public interface IPcNetworkListener
     {

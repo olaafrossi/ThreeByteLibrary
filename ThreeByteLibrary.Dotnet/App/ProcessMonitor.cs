@@ -4,68 +4,33 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
+using Serilog;
+using Serilog.Core;
 
-namespace ThreeByte.App
+namespace ThreeByteLibrary.Dotnet
 {
-    public class ProcessMonitor : IDisposable
+    public class ProcessMonitor : IDisposable, IProcessMonitor
     {
-        private readonly IConfiguration _config;
-        private readonly ILogger<ProcessMonitor> _log;
-        private readonly object _monitoringProcessLock = new();
+        //private static readonly ILog log = LogManager.GetLogger(typeof(ProcessMonitor));
 
-        private bool _disposed;
-
-        private Process _monitoringProcess;
-
-        private Queue<ResourceSnapshotModel> _resourceSnapshots = new Queue<ResourceSnapshotModel>();
-
-        public ProcessMonitor(ILogger<ProcessMonitor> log, IConfiguration config)
-        {
-            _log = log;
-            _config = config;
-
-            //ProcessName = processName;
-            //ExecutionString = executionString;
-
-            //Reasonable defaults
-            MaxResourceSnapshots = 1000;
-            ResourceSnapshotInterval = TimeSpan.FromMinutes(5);
-            UnresponsiveTimeout = TimeSpan.FromMinutes(1);
-
-            ThreadPool.QueueUserWorkItem(MonitorProcess);
-        }
-
-        public string ProcessName { get; }
-        public string ExecutionString { get; }
+        public string ProcessName { get; private set; }
+        public string ExecutionString { get; private set; }
 
         public int MaxResourceSnapshots { get; set; }
         public TimeSpan ResourceSnapshotInterval { get; set; }
         public TimeSpan UnresponsiveTimeout { get; set; }
 
-        public event EventHandler<ProcessMonitorMessages> MessageHit;
+        public event EventHandler<ProcessEventArgs> ProcessEvent;
 
-        public void Dispose()
+        private void RaiseProcessEvent(string message)
         {
-            if (_disposed)
+            Log.Logger.Debug("Process Event [{0}]", message);
+            if (ProcessEvent != null)
             {
-                throw new ObjectDisposedException("ProcessMonitor");
+                ProcessEvent(this, new ProcessEventArgs(message));
             }
-
-            _disposed = true;
-            //Will cause the background thread to exit
         }
 
-        //public event EventHandler<ProcessEventArgs> ProcessEvent;
-
-        //private void RaiseProcessEvent(string message)
-        //{
-        //    //log.DebugFormat("Process Event [{0}]", message);
-        //    if (ProcessEvent != null)
-        //    {
-        //        ProcessEvent(this, new ProcessEventArgs(message));
-        //    }
-        //}
 
         public event EventHandler ProcessExited;
 
@@ -77,26 +42,44 @@ namespace ThreeByte.App
             }
         }
 
+        public ProcessMonitor(string processName, string executionString)
+        {
+            ProcessName = processName;
+            ExecutionString = executionString;
+
+            //Reasonable defaults
+            MaxResourceSnapshots = 1000;
+            ResourceSnapshotInterval = TimeSpan.FromMinutes(5);
+            UnresponsiveTimeout = TimeSpan.FromMinutes(1);
+
+            ThreadPool.QueueUserWorkItem(MonitorProcess);
+        }
+
+        private Process _monitoringProcess;
+        private readonly object _monitoringProcessLock = new object();
+
+        private Queue<ResourceSnapshot> _resourceSnapshots = new Queue<ResourceSnapshot>();
+
         private void MonitorProcess(object state)
         {
+
             try
             {
                 string executionString = ExecutionString;
-                //log.InfoFormat("Launching {0}", executionString);
-                while (_disposed is false)
+                Log.Logger.Information("Launching {0}", executionString);
+                while (!_disposed)
                 {
                     Process p = new Process();
                     p.StartInfo = new ProcessStartInfo(executionString);
                     p.Start();
-                    Thread.Sleep(
-                        5000); //Wait at least 5 seconds before doing anything else to prevent spiraling out of control
+                    Thread.Sleep(5000);  //Wait at least 5 seconds before doing anything else to prevent spiraling out of control
 
                     //Look for process
                     foreach (Process proc in Process.GetProcesses())
                     {
                         if (proc.ProcessName.StartsWith(ProcessName))
                         {
-                            //log.InfoFormat("Found Monitor Process: {0}", proc.ProcessName);
+                            Log.Logger.Information("Found Monitor Process: {0}", proc.ProcessName);
                             lock (_monitoringProcessLock)
                             {
                                 _monitoringProcess = proc;
@@ -104,18 +87,18 @@ namespace ThreeByte.App
 
                             ClearSnapshotHistory();
                             DateTime unresponsiveTime = DateTime.Now;
-                            bool exited = proc.WaitForExit((int) ResourceSnapshotInterval.TotalMilliseconds);
+                            bool exited = proc.WaitForExit((int)(ResourceSnapshotInterval.TotalMilliseconds));
                             while (!exited)
                             {
                                 //The process is still running.  This is good, just take a snapshot of it
                                 lock (_monitoringProcessLock)
                                 {
-                                    ResourceSnapshotModel snapshotModel = LogResourceSnapshot(_monitoringProcess);
-                                    if (snapshotModel.IsNotResponding)
+                                    ResourceSnapshot snapshot = LogResourceSnapshot(_monitoringProcess);
+                                    if (snapshot.IsNotResponding)
                                     {
                                         if (DateTime.Now >= unresponsiveTime + UnresponsiveTimeout)
                                         {
-                                            //log.WarnFormat("Application is not responding.  Will kill.");
+                                            Log.Logger.Warning("Application is not responding.  Will kill.");
                                             Kill();
                                         }
                                     }
@@ -124,8 +107,7 @@ namespace ThreeByte.App
                                         unresponsiveTime = DateTime.Now;
                                     }
                                 }
-
-                                exited = proc.WaitForExit((int) ResourceSnapshotInterval.TotalMilliseconds);
+                                exited = proc.WaitForExit((int)(ResourceSnapshotInterval.TotalMilliseconds));
                             }
 
                             //Once the process exits, then dump some stats and restart it
@@ -137,42 +119,43 @@ namespace ThreeByte.App
                         }
                     }
                 }
+
             }
             catch (Exception ex)
             {
-                //RaiseProcessEvent(string.Format("Error with program: {0}", ex.Message));
-                // send a message back to the main class
+                RaiseProcessEvent(string.Format("Error with program: {0}", ex.Message));
             }
+
         }
 
-        private ResourceSnapshotModel LogResourceSnapshot(Process proc)
+
+        private ResourceSnapshot LogResourceSnapshot(Process proc)
         {
             proc.Refresh();
-            ResourceSnapshotModel snapshotModel = ResourceSnapshotModel.FromProcess(proc);
-            //log.DebugFormat("Process Snapshot: {0}", snapshotModel);
+            ResourceSnapshot snapshot = ResourceSnapshot.FromProcess(proc);
+            Log.Logger.Debug("Process Snapshot: {0}", snapshot);
 
             lock (_resourceSnapshots)
             {
-                _resourceSnapshots.Enqueue(snapshotModel);
+                _resourceSnapshots.Enqueue(snapshot);
                 while (_resourceSnapshots.Count > MaxResourceSnapshots)
                 {
                     _resourceSnapshots.Dequeue(); //Just abandon old resource snapshots
                 }
             }
-
-            return snapshotModel;
+            return snapshot;
         }
 
-        public IEnumerable<ResourceSnapshotModel> GetSnapshotHistory()
+        public IEnumerable<ResourceSnapshot> GetSnapshotHistory()
         {
             //Make sure that you do not give access to the underlying queue
-            List<ResourceSnapshotModel> snapshots;
+            List<ResourceSnapshot> snapshots;
             lock (_resourceSnapshots)
             {
                 snapshots = _resourceSnapshots.Reverse().ToList();
             }
 
-            foreach (ResourceSnapshotModel s in snapshots)
+            foreach (ResourceSnapshot s in snapshots)
             {
                 yield return s;
             }
@@ -192,7 +175,6 @@ namespace ThreeByte.App
             {
                 throw new ObjectDisposedException("ProcessMonitor");
             }
-
             try
             {
                 lock (_monitoringProcessLock)
@@ -202,39 +184,65 @@ namespace ThreeByte.App
             }
             catch (Exception ex)
             {
-                //log.Error("Cannot kill process: {0}", ex);
+                Log.Logger.Error("Cannot kill process: {0}", ex);
             }
         }
 
-        private void LogToAll(Enum log, string message)
+        private bool _disposed = false;
+        public void Dispose()
         {
-            _log.LogInformation(message);
-
-            ProcessMonitorMessages args = new ProcessMonitorMessages();
-            args.UILogger = (ProcessMonitorMessages._UiLogger) log;
-            args.Message = $"{DateTime.Now:HH:mm:ss.fff} | {message}";
-            OnNewMessages(args);
-        }
-
-        protected virtual void OnNewMessages(ProcessMonitorMessages e)
-        {
-            EventHandler<ProcessMonitorMessages> handler = MessageHit;
-            if (handler != null)
+            if (_disposed)
             {
-                handler(this, e);
+                throw new ObjectDisposedException("ProcessMonitor");
             }
+            _disposed = true;
+            //Will cause the background thread to exit
         }
     }
 
-    public class ProcessMonitorMessages : EventArgs
+    public class ProcessEventArgs : EventArgs
     {
-        public enum _UiLogger
+        public string Message { get; private set; }
+
+        public ProcessEventArgs(string message)
         {
-            netLog,
-            appLog
+            Message = message;
+        }
+    }
+
+    public class ResourceSnapshot
+    {
+        public DateTime Timestamp { get; private set; }
+        public long PeakPagedMemorySize { get; private set; }
+        public long PeakWorkingSet { get; private set; }
+        public long PrivateMemorySize { get; private set; }
+        public int ThreadCount { get; private set; }
+        public int HandleCount { get; private set; }
+        public bool IsNotResponding { get; private set; }
+
+        private ResourceSnapshot()
+        {
+            Timestamp = DateTime.Now;
         }
 
-        public _UiLogger UILogger { get; set; }
-        public string Message { get; set; }
+        public static ResourceSnapshot FromProcess(Process process)
+        {
+            ResourceSnapshot newSnapshot = new ResourceSnapshot()
+            {
+                PeakPagedMemorySize = process.PeakPagedMemorySize64,
+                PeakWorkingSet = process.PeakWorkingSet64,
+                PrivateMemorySize = process.PrivateMemorySize64,
+                ThreadCount = process.Threads.Count,
+                HandleCount = process.HandleCount,
+                IsNotResponding = !process.Responding
+            };
+            return newSnapshot;
+        }
+
+        public override string ToString()
+        {
+            return string.Format("{0} - PeakPaged: {1} PeakWorking: {2} PrivateMemory: {3} ThreadCount: {4} HandleCount: {5} IsNotResponding: {6}",
+                Timestamp, PeakPagedMemorySize, PeakWorkingSet, PrivateMemorySize, ThreadCount, HandleCount, IsNotResponding);
+        }
     }
 }

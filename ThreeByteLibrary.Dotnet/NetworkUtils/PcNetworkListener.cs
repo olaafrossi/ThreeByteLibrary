@@ -13,7 +13,7 @@ namespace ThreeByteLibrary.Dotnet
     {
         private readonly int portNum;
 
-        private readonly ILogger log;
+        private readonly ILogger log = Log.Logger;
 
         /// <summary>
         ///     Constructor for the PC listener, injects dependencies

@@ -1,4 +1,4 @@
-﻿// Created by Three Byte Intemedia, Inc. | project: ThreeByteLibrary |
+// Created by Three Byte Intemedia, Inc. | project: ThreeByteLibrary |
 // Created: 2021 03 17
 // by Olaaf Rossi
 
@@ -11,7 +11,7 @@ using Serilog;
 
 namespace ThreeByteLibrary.Dotnet.NetworkUtils
 {
-    public class AsyncUdpLink : IDisposable, INotifyPropertyChanged
+    public class AsyncUdpLink : IDisposable, INotifyPropertyChanged, IAsyncUdpLink
     {
         private const int MAX_DATA_SIZE = 100;
 
@@ -34,6 +34,7 @@ namespace ThreeByteLibrary.Dotnet.NetworkUtils
         {
             Address = address;
             Port = remotePort;
+            LocalPort = localPort;
 
             _incomingData = new List<byte[]>();
             _udpClient = new UdpClient(localPort); //Typically don't bind to the same port that you send to
@@ -262,6 +263,7 @@ namespace ThreeByteLibrary.Dotnet.NetworkUtils
         public string Address { get; }
         public int Port { get; }
 
+        public int LocalPort { get; set; }
         public bool HasData
         {
             get { return _incomingData.Count > 0; }

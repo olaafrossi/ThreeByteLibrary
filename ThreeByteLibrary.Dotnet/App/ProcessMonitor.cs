@@ -6,6 +6,8 @@ using System.Threading;
 using Microsoft.Extensions.Configuration;
 using Serilog;
 using Serilog.Core;
+// ReSharper disable CheckNamespace
+// ReSharper disable once ArrangeModifiersOrder
 
 namespace ThreeByteLibrary.Dotnet
 {
@@ -21,6 +23,8 @@ namespace ThreeByteLibrary.Dotnet
         public TimeSpan UnresponsiveTimeout { get; set; }
 
         public event EventHandler<ProcessEventArgs> ProcessEvent;
+
+        public event EventHandler<ResourceSnapshot> ResourceEvent;
 
         private void RaiseProcessEvent(string message)
         {
@@ -49,7 +53,7 @@ namespace ThreeByteLibrary.Dotnet
 
             //Reasonable defaults
             MaxResourceSnapshots = 1000;
-            ResourceSnapshotInterval = TimeSpan.FromMinutes(5);
+            ResourceSnapshotInterval = TimeSpan.FromSeconds(15);
             UnresponsiveTimeout = TimeSpan.FromMinutes(1);
 
             ThreadPool.QueueUserWorkItem(MonitorProcess);
@@ -94,6 +98,7 @@ namespace ThreeByteLibrary.Dotnet
                                 lock (_monitoringProcessLock)
                                 {
                                     ResourceSnapshot snapshot = LogResourceSnapshot(_monitoringProcess);
+                                    ResourceEvent(this, snapshot);
                                     if (snapshot.IsNotResponding)
                                     {
                                         if (DateTime.Now >= unresponsiveTime + UnresponsiveTimeout)
@@ -129,7 +134,7 @@ namespace ThreeByteLibrary.Dotnet
         }
 
 
-        private ResourceSnapshot LogResourceSnapshot(Process proc)
+        public ResourceSnapshot LogResourceSnapshot(Process proc)
         {
             proc.Refresh();
             ResourceSnapshot snapshot = ResourceSnapshot.FromProcess(proc);

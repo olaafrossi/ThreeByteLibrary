@@ -4,6 +4,8 @@
 
 using System;
 using System.Collections.Generic;
+// ReSharper disable CheckNamespace
+// ReSharper disable once ArrangeModifiersOrder
 
 namespace ThreeByteLibrary.Dotnet
 {
@@ -15,6 +17,7 @@ namespace ThreeByteLibrary.Dotnet
         TimeSpan ResourceSnapshotInterval { get; set; }
         TimeSpan UnresponsiveTimeout { get; set; }
         event EventHandler<ProcessEventArgs> ProcessEvent;
+        event EventHandler<ResourceSnapshot> ResourceEvent;
         event EventHandler ProcessExited;
         IEnumerable<ResourceSnapshot> GetSnapshotHistory();
         void Kill();

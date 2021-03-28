@@ -98,7 +98,16 @@ namespace ThreeByteLibrary.Dotnet
                                 lock (_monitoringProcessLock)
                                 {
                                     ResourceSnapshot snapshot = LogResourceSnapshot(_monitoringProcess);
-                                    ResourceEvent(this, snapshot);
+                                    try
+                                    {
+                                        ResourceEvent?.Invoke(this, snapshot);
+                                    }
+                                    catch (Exception e)
+                                    {
+                                        Log.Logger.Information("No Event Handler for the snap {e}", e);
+
+                                    }
+                                    
                                     if (snapshot.IsNotResponding)
                                     {
                                         if (DateTime.Now >= unresponsiveTime + UnresponsiveTimeout)

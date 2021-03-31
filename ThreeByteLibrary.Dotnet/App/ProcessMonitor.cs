@@ -53,7 +53,7 @@ namespace ThreeByteLibrary.Dotnet
 
             //Reasonable defaults
             MaxResourceSnapshots = 1000;
-            ResourceSnapshotInterval = TimeSpan.FromSeconds(15);
+            ResourceSnapshotInterval = TimeSpan.FromSeconds(1);
             UnresponsiveTimeout = TimeSpan.FromMinutes(1);
 
             ThreadPool.QueueUserWorkItem(MonitorProcess);

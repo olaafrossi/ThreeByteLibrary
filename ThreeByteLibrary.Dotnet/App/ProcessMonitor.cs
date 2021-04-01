@@ -21,6 +21,7 @@ namespace ThreeByteLibrary.Dotnet
         public int MaxResourceSnapshots { get; set; }
         public TimeSpan ResourceSnapshotInterval { get; set; }
         public TimeSpan UnresponsiveTimeout { get; set; }
+        public int TakeResourceSnapShotInSeconds { get; set; }
 
         public event EventHandler<ProcessEventArgs> ProcessEvent;
 
@@ -46,14 +47,15 @@ namespace ThreeByteLibrary.Dotnet
             }
         }
 
-        public ProcessMonitor(string processName, string executionString)
+        public ProcessMonitor(string processName, string executionString, int interval)
         {
+            TakeResourceSnapShotInSeconds = interval;
             ProcessName = processName;
             ExecutionString = executionString;
 
             //Reasonable defaults
             MaxResourceSnapshots = 1000;
-            ResourceSnapshotInterval = TimeSpan.FromSeconds(1);
+            ResourceSnapshotInterval = TimeSpan.FromSeconds(TakeResourceSnapShotInSeconds);
             UnresponsiveTimeout = TimeSpan.FromMinutes(1);
 
             ThreadPool.QueueUserWorkItem(MonitorProcess);

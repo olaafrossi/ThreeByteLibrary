@@ -1,11 +1,10 @@
 ﻿// Created by Three Byte Intemedia, Inc. | project: PCController |
-// Created: 2021 03 16
+// Created: 2021 04 01
 // by Olaaf Rossi
 
 using System;
 using System.Collections.Generic;
-// ReSharper disable CheckNamespace
-// ReSharper disable once ArrangeModifiersOrder
+using System.Diagnostics;
 
 namespace ThreeByteLibrary.Dotnet
 {
@@ -16,9 +15,11 @@ namespace ThreeByteLibrary.Dotnet
         int MaxResourceSnapshots { get; set; }
         TimeSpan ResourceSnapshotInterval { get; set; }
         TimeSpan UnresponsiveTimeout { get; set; }
+        int TakeResourceSnapShotInSeconds { get; set; }
         event EventHandler<ProcessEventArgs> ProcessEvent;
         event EventHandler<ResourceSnapshot> ResourceEvent;
         event EventHandler ProcessExited;
+        ResourceSnapshot LogResourceSnapshot(Process proc);
         IEnumerable<ResourceSnapshot> GetSnapshotHistory();
         void Kill();
         void Dispose();

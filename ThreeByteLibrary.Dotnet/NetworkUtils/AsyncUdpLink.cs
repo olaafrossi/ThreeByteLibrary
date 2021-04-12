@@ -16,7 +16,7 @@ namespace ThreeByteLibrary.Dotnet.NetworkUtils
         private const int MAX_DATA_SIZE = 100;
         private readonly object _clientLock = new();
         private readonly List<byte[]> _incomingData;
-        private readonly ILogger log = Log.Logger;
+        private readonly ILogger log = Log.Logger; //TODO switch to Mvx logger
         private bool _disposed;
         private IAsyncResult _receiveResult;
         private IAsyncResult _sendResult;

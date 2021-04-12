@@ -13,6 +13,7 @@ namespace ThreeByteLibrary.Dotnet.NetworkUtils
 {
     /// <summary>
     ///     Based primarily on source from:
+    ///  add a comment to trip git
     ///     http://www.codeproject.com/KB/IP/cswol.aspx
     /// </summary>
     public class WakeOnLanManager : UdpClient
